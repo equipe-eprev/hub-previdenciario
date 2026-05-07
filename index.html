@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hub de Agentes Previdenciários — ePREV × Tramitação Inteligente</title>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f4f9;
+      color: #1a2340;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #0d2b6b 0%, #1a4fa8 100%);
+      color: #fff;
+      padding: 36px 24px 28px;
+      text-align: center;
+    }
+
+    header .badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 20px;
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      margin-bottom: 14px;
+    }
+
+    header h1 {
+      font-size: clamp(22px, 4vw, 34px);
+      font-weight: 700;
+      line-height: 1.25;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      font-size: 15px;
+      opacity: 0.85;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    /* ── Disclaimer ── */
+    .disclaimer {
+      background: #fff8e1;
+      border-left: 4px solid #f59e0b;
+      max-width: 900px;
+      margin: 24px auto 0;
+      border-radius: 6px;
+      padding: 14px 18px;
+      font-size: 13px;
+      color: #5c4a00;
+      line-height: 1.55;
+    }
+
+    .disclaimer strong { color: #92400e; }
+
+    /* ── Main ── */
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 32px 16px 60px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #64748b;
+      margin-bottom: 20px;
+    }
+
+    /* ── Grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+      gap: 16px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      border: 1.5px solid #e2e8f0;
+      padding: 22px 20px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: var(--accent, #1a4fa8);
+      border-radius: 12px 12px 0 0;
+    }
+
+    .card:hover {
+      border-color: var(--accent, #1a4fa8);
+      box-shadow: 0 6px 20px rgba(26,79,168,0.12);
+      transform: translateY(-2px);
+    }
+
+    /* Cards com link ativo */
+    .card.active { cursor: pointer; }
+
+    /* Cards sem link ainda */
+    .card.pending {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+    .card.pending:hover { transform: none; box-shadow: none; border-color: #e2e8f0; }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .card-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: var(--icon-bg, #eff6ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .card-num {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent, #1a4fa8);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.3;
+      color: #1a2340;
+    }
+
+    .card-desc {
+      font-size: 12.5px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    .card-footer {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .card.active .card-footer { color: var(--accent, #1a4fa8); }
+    .card.pending .card-footer { color: #94a3b8; }
+
+    .card-footer svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    .tag-pending {
+      display: inline-block;
+      background: #f1f5f9;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+      padding: 2px 7px;
+      text-transform: uppercase;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 20px 16px;
+      font-size: 12px;
+      color: #94a3b8;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    footer a { color: #1a4fa8; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── Responsive ── */
+    @media (max-width: 500px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="badge">ePREV × Tramitação Inteligente</div>
+  <h1>Hub de Agentes Previdenciários</h1>
+  <p>Selecione o tipo de peça processual. Cada agente é especializado em uma única categoria e vai guiar você até o documento final.</p>
+
+  <div class="disclaimer">
+    <strong>⚠️ Aviso importante:</strong> análises jurídicas por IA podem estar sujeitas a erros e requerem revisão humana. Toda jurisprudência, lei ou ato normativo citado deve ser verificado antes do uso em processos. Estes agentes não elaboram cálculos previdenciários.
+  </div>
+</header>
+
+<main>
+  <p class="section-title">13 agentes disponíveis</p>
+
+  <div class="grid">
+
+    <!-- 1. Benefícios por Incapacidade -->
+    <a class="card active"
+       style="--accent:#dc2626;--icon-bg:#fef2f2;"
+       href="https://gemini.google.com/gem/1e01i2m74Y37XfzM2WE3Q_ZwMsAHxs4Xb?usp=sharing"
+       target="_blank" rel="noopener">
+      <div class="card-header">
+        <div class="card-icon">🩺</div>
+        <div>
+          <div class="card-num">Agente 01</div>
+          <div class="card-title">Benefícios por Incapacidade</div>
+        </div>
+      </div>
+      <div class="card-desc">Auxílio por Incapacidade Temporária (B31), Aposentadoria por Incapacidade Permanente (B32) e Auxílio-Acidente (B94).</div>
+      <div class="card-footer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Abrir agente no Gemini
+      </div>
+    </a>
+
+    <!-- 2. BPC/LOAS -->
+    <a class="card active"
+       style="--accent:#7c3aed;--icon-bg:#f5f3ff;"
+       href="https://gemini.google.com/gem/1VgbMG4KMTdISZuLwC_p2lz-Ow97K3XYH?usp=sharing"
+       target="_blank" rel="noopener">
+      <div class="card-header">
+        <div class="card-icon">🤝</div>
+        <div>
+          <div class="card-num">Agente 02</div>
+          <div class="card-title">BPC/LOAS</div>
+        </div>
+      </div>
+      <div class="card-desc">Benefício de Prestação Continuada — modalidade Idoso (≥65 anos) e modalidade Pessoa com Deficiência (PCD).</div>
+      <div class="card-footer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Abrir agente no Gemini
+      </div>
+    </a>
+
+    <!-- 3. Pensão por Morte -->
+    <a class="card active"
+       style="--accent:#0891b2;--icon-bg:#ecfeff;"
+       href="https://gemini.google.com/gem/1htZQWpx46eiqjoyNfoZLNUFAHCa9UUxB?usp=sharing"
+       target="_blank" rel="noopener">
+      <div class="card-header">
+        <div class="card-icon">🕊️</div>
+        <div>
+          <div class="card-num">Agente 03</div>
+          <div class="card-title">Pensão por Morte</div>
+        </div>
+      </div>
+      <div class="card-desc">Cônjuge, companheiro(a), filhos e demais dependentes — urbano e rural, com ou sem união estável.</div>
+      <div class="card-footer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Abrir agente no Gemini
+      </div>
+    </a>
+
+    <!-- 4. Salário-Maternidade -->
+    <a class="card active"
+       style="--accent:#db2777;--icon-bg:#fdf2f8;"
+       href="https://gemini.google.com/gem/1HqyttOKx0xz_Hd-9FJgKJxUssx6yikZ6?usp=sharing"
+       target="_blank" rel="noopener">
+      <div class="card-header">
+        <div class="card-icon">👶</div>
+        <div>
+          <div class="card-num">Agente 04</div>
+          <div class="card-title">Salário-Maternidade</div>
+        </div>
+      </div>
+      <div class="card-desc">Empregada, doméstica, autônoma, facultativa e segurada especial rural — parto, adoção e guarda.</div>
+      <div class="card-footer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Abrir agente no Gemini
+      </div>
+    </a>
+
+    <!-- 5. Aposentadoria Rural -->
+    <a class="card active"
+       style="--accent:#16a34a;--icon-bg:#f0fdf4;"
+       href="https://gemini.google.com/gem/1eESLtivD2keb3C-OwqaJYInyc6C6mU99?usp=sharing"
+       target="_blank" rel="noopener">
+      <div class="card-header">
+        <div class="card-icon">🌾</div>
+        <div>
+          <div class="card-num">Agente 05</div>
+          <div class="card-title">Aposentadoria por Idade Rural</div>
+        </div>
+      </div>
+      <div class="card-desc">Segurado especial — economia familiar, prova material, vínculos urbanos intercalados, documentos em nome do cônjuge.</div>
+      <div class="card-footer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Abrir agente no Gemini
+      </div>
+    </a>
+
+    <!-- 6. Aposentadoria Urbana -->
+    <a class="card active"
+       style="--accent:#1a4fa8;--icon-bg:#eff6ff;"
+       href="https://gemini.google.com/gem/1B42fZaKTcY48JyZmBy4qflixKAM21bgi?usp=sharing"
+       target="_blank" rel="noopener">
+      <div class="card-header">
+        <div class="card-icon">🏙️</div>
+        <div>
+          <div class="card-num">Agente 06</div>
+          <div class="card-title">Aposentadoria por Idade Urbana</div>
+        </div>
+      </div>
+      <div class="card-desc">Direito adquirido (pré-EC 103/2019) e regra de transição (art. 18). Aluno-aprendiz, divergência CNIS × CTPS.</div>
+      <div class="card-footer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Abrir agente no Gemini
+      </div>
+    </a>
+
+    <!-- 7. Aposentadoria por TC -->
+    <a class="card active"
+       style="--accent:#b45309;--icon-bg:#fffbeb;"
+       href="https://gemini.google.com/gem/12OVET16bClMStiUvhYhIO90AoJtMyUM6?usp=sharing"
+       target="_blank" rel="noopener">
+      <div class="card-header">
+        <div class="card-icon">📅</div>
+        <div>
+          <div class="card-num">Agente 07</div>
+          <div class="card-title">Aposentadoria por Tempo de Contribuição</div>
+        </div>
+      </div>
+      <div class="card-desc">Direito adquirido e todas as regras de transição da EC 103/2019 (Pedágio 50%, Pedágio 100%, Pontos, Idade Progressiva).</div>
+      <div class="card-footer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Abrir agente no Gemini
+      </div>
+    </a>
+
+    <!-- 8. Aposentadoria Híbrida -->
+    <a class="card active"
+       style="--accent:#0f766e;--icon-bg:#f0fdfa;"
+       href="https://gemini.google.com/gem/1QmYXMLccxYD6Ve5mOqMWET3EzJwjzkqk?usp=sharing"
+       target="_blank" rel="noopener">
+      <div class="card-header">
+        <div class="card-icon">⚖️</div>
+        <div>
+          <div class="card-num">Agente 08</div>
+          <div class="card-title">Aposentadoria por Idade Híbrida</div>
+        </div>
+      </div>
+      <div class="card-desc">Soma de períodos rurais (segurado especial) e urbanos. Tema 1.007/STJ — irrelevância da última atividade exercida.</div>
+      <div class="card-footer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Abrir agente no Gemini
+      </div>
+    </a>
+
+    <!-- 9. Aposentadoria Especial -->
+    <a class="card active"
+       style="--accent:#ea580c;--icon-bg:#fff7ed;"
+       href="https://gemini.google.com/gem/1_ZxtpGeyKq4g5aKXm_Rwpg7Ie4JbzOdb?usp=sharing"
+       target="_blank" rel="noopener">
+      <div class="card-header">
+        <div class="card-icon">⚠️</div>
+        <div>
+          <div class="card-num">Agente 09</div>
+          <div class="card-title">Aposentadoria Especial</div>
+        </div>
+      </div>
+      <div class="card-desc">Agentes nocivos (ruído, sílica, biológicos, calor, vibração, formol), vigilantes, categorias profissionais pré-1995, conversão de tempo especial.</div>
+      <div class="card-footer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Abrir agente no Gemini
+      </div>
+    </a>
+
+    <!-- 10. Mandado de Segurança -->
+    <a class="card active"
+       style="--accent:#6d28d9;--icon-bg:#faf5ff;"
+       href="https://gemini.google.com/gem/1OVdYNrMkESduFhFZbWzs1GcxyQ2m7LBf?usp=sharing"
+       target="_blank" rel="noopener">
+      <div class="card-header">
+        <div class="card-icon">⚡</div>
+        <div>
+          <div class="card-num">Agente 10</div>
+          <div class="card-title">Mandado de Segurança Previdenciário</div>
+        </div>
+      </div>
+      <div class="card-desc">Demora na análise do pedido, no julgamento do recurso (CRPS), no cumprimento de diligências ou na implantação de acórdão.</div>
+      <div class="card-footer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Abrir agente no Gemini
+      </div>
+    </a>
+
+    <!-- 11. Aposentadoria PCD -->
+    <a class="card active"
+       style="--accent:#0369a1;--icon-bg:#f0f9ff;"
+       href="https://gemini.google.com/gem/11hGRBZS2KdIZ2r9fsKFe9bdDVyzo5-Nw?usp=sharing"
+       target="_blank" rel="noopener">
+      <div class="card-header">
+        <div class="card-icon">♿</div>
+        <div>
+          <div class="card-num">Agente 11</div>
+          <div class="card-title">Aposentadoria da Pessoa com Deficiência</div>
+        </div>
+      </div>
+      <div class="card-desc">LC 142/2013 — modalidade por Idade (60/55 anos) e por Tempo de Contribuição (variável conforme grau: leve, moderada ou grave).</div>
+      <div class="card-footer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Abrir agente no Gemini
+      </div>
+    </a>
+
+    <!-- 12. Requerimento Administrativo -->
+    <a class="card active"
+       style="--accent:#475569;--icon-bg:#f8fafc;"
+       href="https://gemini.google.com/gem/13u3HqoMBN-ppuYyUaJQzlWE25_8j7XrC?usp=sharing"
+       target="_blank" rel="noopener">
+      <div class="card-header">
+        <div class="card-icon">📋</div>
+        <div>
+          <div class="card-num">Agente 12</div>
+          <div class="card-title">Requerimento Administrativo ao INSS</div>
+        </div>
+      </div>
+      <div class="card-desc">Requerimento formal para qualquer benefício — fundamentação estritamente legal (sem jurisprudência), dirigido ao gerente da APS.</div>
+      <div class="card-footer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Abrir agente no Gemini
+      </div>
+    </a>
+
+    <!-- 13. Recurso Inominado -->
+    <a class="card active"
+       style="--accent:#be185d;--icon-bg:#fdf4ff;"
+       href="https://gemini.google.com/gem/1QMC2Juq7v_2O4QoaQos460upyl-iGCFJ?usp=sharing"
+       target="_blank" rel="noopener">
+      <div class="card-header">
+        <div class="card-icon">📣</div>
+        <div>
+          <div class="card-num">Agente 13</div>
+          <div class="card-title">Recurso Inominado — JEF</div>
+        </div>
+      </div>
+      <div class="card-desc">Reforma ou anulação de sentença nos Juizados Especiais Federais — erro na prova, laudo divergente, Súmula/Tema não aplicado, cerceamento de defesa.</div>
+      <div class="card-footer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Abrir agente no Gemini
+      </div>
+    </a>
+
+  </div><!-- /grid -->
+</main>
+
+<footer>
+  Hub de Agentes Previdenciários · <a href="https://eprev.com.br" target="_blank" rel="noopener">ePREV</a> × <a href="https://tramitacaointeligente.com.br" target="_blank" rel="noopener">Tramitação Inteligente</a>
+  <br>Os agentes são alimentados pelo Google Gemini. Revise sempre o output antes de usar em processos.
+</footer>
+
+</body>
+</html>
