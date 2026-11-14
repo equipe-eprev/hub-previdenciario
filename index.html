@@ -285,10 +285,12 @@
 <section class="login" id="login">
   <form class="login-card" id="login-form">
     <h2>Acesso exclusivo para alunos</h2>
-    <p>Digite o e-mail que você usou na inscrição da ePREV para liberar os agentes.</p>
+    <p>Use o e-mail e o CPF informados na sua inscrição na ePREV.</p>
     <label for="email">E-mail</label>
-    <input id="email" type="email" autocomplete="email" required placeholder="seuemail@exemplo.com" />
-    <button type="submit">Entrar</button>
+    <input id="email" type="email" autocomplete="username" required placeholder="seuemail@exemplo.com" />
+    <label for="senha" style="margin-top:14px">Senha: seu CPF (ou CNPJ, se foi o usado na inscrição)</label>
+    <input id="senha" type="password" inputmode="numeric" autocomplete="current-password" required placeholder="Somente números" />
+    <button type="submit" id="entrar">Entrar</button>
     <div class="login-erro" id="login-erro" role="alert"></div>
   </form>
 </section>
@@ -564,9 +566,17 @@
     var hub = document.getElementById('hub');
     var erro = document.getElementById('login-erro');
 
-    async function hash(email) {
-      var data = new TextEncoder().encode(window.ALUNOS_SALT + email.trim().toLowerCase());
-      var buf = await crypto.subtle.digest('SHA-256', data);
+    async function hash(email, documento) {
+      var enc = new TextEncoder();
+      var doc = documento.replace(/\D/g, '');
+      if (doc.length > 0 && doc.length <= 11) doc = doc.padStart(11, '0');
+      var chave = await crypto.subtle.importKey('raw', enc.encode(doc), 'PBKDF2', false, ['deriveBits']);
+      var buf = await crypto.subtle.deriveBits({
+        name: 'PBKDF2',
+        salt: enc.encode(window.ALUNOS_SALT + email.trim().toLowerCase()),
+        iterations: window.ALUNOS_ITERACOES,
+        hash: 'SHA-256'
+      }, chave, 256);
       return Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
     }
 
@@ -583,11 +593,16 @@
     document.getElementById('login-form').addEventListener('submit', async function (ev) {
       ev.preventDefault();
       erro.textContent = '';
-      var h = await hash(document.getElementById('email').value);
+      var botao = document.getElementById('entrar');
+      botao.disabled = true;
+      botao.textContent = 'Verificando…';
+      var h = await hash(document.getElementById('email').value, document.getElementById('senha').value);
+      botao.disabled = false;
+      botao.textContent = 'Entrar';
       if (window.ALUNOS.has(h)) {
         liberar(h);
       } else {
-        erro.textContent = 'E-mail não encontrado na lista de alunos. Confira se é o mesmo e-mail da inscrição ou fale com a equipe ePREV.';
+        erro.textContent = 'E-mail ou CPF não conferem com a lista de alunos. Confira os dados da inscrição ou fale com a equipe ePREV.';
       }
     });
 
@@ -596,6 +611,7 @@
       hub.hidden = true;
       login.hidden = false;
       document.getElementById('email').value = '';
+      document.getElementById('senha').value = '';
     });
   })();
 </script>
