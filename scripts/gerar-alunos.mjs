@@ -35,13 +35,18 @@ const normalizarDocumento = (d) => {
   const n = d.replace(/\D/g, '');
   return n.length > 0 && n.length <= 11 ? n.padStart(11, '0') : n;
 };
+// Precisa bater com normalizarSenha() do index.html.
+const normalizarPrimeiroNome = (nome) =>
+  nome.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').split(/\s+/)[0] || '';
 
 const pares = new Map();
-const semDocumento = [];
+const porNome = [];
+const semSenha = [];
 for (const f of files) {
   const [cab, ...linhas] = parseCsv(readFileSync(f, 'utf8'));
   const iEmail = cab.findIndex((h) => /mail/i.test(h));
   const iDoc = cab.findIndex((h) => /documento|cpf|cnpj/i.test(h));
+  const iNome = cab.findIndex((h) => /nome/i.test(h));
   if (iEmail < 0 || iDoc < 0) {
     console.error(`${f}: não encontrei as colunas de e-mail e documento no cabeçalho.`);
     process.exit(1);
@@ -50,8 +55,10 @@ for (const f of files) {
     const email = normalizarEmail(l[iEmail] || '');
     if (!email.includes('@')) continue;
     const doc = normalizarDocumento(l[iDoc] || '');
-    if (!doc) { semDocumento.push(email); continue; }
-    pares.set(email, doc);
+    if (doc) { pares.set(email, doc); continue; }
+    const nome = iNome >= 0 ? normalizarPrimeiroNome(l[iNome] || '') : '';
+    if (nome) { pares.set(email, nome); porNome.push(`${email} (senha: ${nome})`); }
+    else semSenha.push(email);
   }
 }
 
@@ -64,7 +71,11 @@ writeFileSync(
   `window.ALUNOS_SALT = ${JSON.stringify(SALT)};\nwindow.ALUNOS_ITERACOES = ${ITERACOES};\nwindow.ALUNOS = new Set(${JSON.stringify(hashes)});\n`
 );
 console.log(`alunos.js gerado com ${hashes.length} alunos.`);
-if (semDocumento.length) {
-  console.log(`\n${semDocumento.length} aluno(s) sem documento na planilha (não conseguirão entrar):`);
-  for (const e of semDocumento) console.log('  - ' + e);
+if (porNome.length) {
+  console.log(`\n${porNome.length} aluno(s) sem CPF/CNPJ entram com o primeiro nome:`);
+  for (const e of porNome) console.log('  - ' + e);
+}
+if (semSenha.length) {
+  console.log(`\n${semSenha.length} aluno(s) sem documento nem nome (não conseguirão entrar):`);
+  for (const e of semSenha) console.log('  - ' + e);
 }

@@ -289,7 +289,8 @@
     <label for="email">E-mail</label>
     <input id="email" type="email" autocomplete="username" required placeholder="seuemail@exemplo.com" />
     <label for="senha" style="margin-top:14px">Senha: seu CPF (ou CNPJ, se foi o usado na inscrição)</label>
-    <input id="senha" type="password" inputmode="numeric" autocomplete="current-password" required placeholder="Somente números" />
+    <input id="senha" type="password" autocomplete="current-password" required placeholder="CPF, somente números" />
+    <p style="font-size:12.5px;margin:6px 0 0">Não informou CPF na inscrição? Use seu primeiro nome.</p>
     <button type="submit" id="entrar">Entrar</button>
     <div class="login-erro" id="login-erro" role="alert"></div>
   </form>
@@ -566,11 +567,18 @@
     var hub = document.getElementById('hub');
     var erro = document.getElementById('login-erro');
 
-    async function hash(email, documento) {
+    // Precisa bater com a normalização de scripts/gerar-alunos.mjs.
+    function normalizarSenha(senha) {
+      if (/\d/.test(senha)) {
+        var doc = senha.replace(/\D/g, '');
+        return doc.length <= 11 ? doc.padStart(11, '0') : doc;
+      }
+      return senha.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').split(/\s+/)[0];
+    }
+
+    async function hash(email, senha) {
       var enc = new TextEncoder();
-      var doc = documento.replace(/\D/g, '');
-      if (doc.length > 0 && doc.length <= 11) doc = doc.padStart(11, '0');
-      var chave = await crypto.subtle.importKey('raw', enc.encode(doc), 'PBKDF2', false, ['deriveBits']);
+      var chave = await crypto.subtle.importKey('raw', enc.encode(normalizarSenha(senha)), 'PBKDF2', false, ['deriveBits']);
       var buf = await crypto.subtle.deriveBits({
         name: 'PBKDF2',
         salt: enc.encode(window.ALUNOS_SALT + email.trim().toLowerCase()),
@@ -602,7 +610,7 @@
       if (window.ALUNOS.has(h)) {
         liberar(h);
       } else {
-        erro.textContent = 'E-mail ou CPF não conferem com a lista de alunos. Confira os dados da inscrição ou fale com a equipe ePREV.';
+        erro.textContent = 'E-mail ou senha não conferem com a lista de alunos. Confira os dados da inscrição ou fale com a equipe ePREV.';
       }
     });
 
