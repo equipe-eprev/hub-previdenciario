@@ -206,6 +206,64 @@
     footer a { color: #1a4fa8; text-decoration: none; }
     footer a:hover { text-decoration: underline; }
 
+    /* ── Login ── */
+    .login {
+      max-width: 420px;
+      margin: 40px auto 60px;
+      padding: 0 16px;
+    }
+    .login-card {
+      background: #fff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 28px 24px;
+    }
+    .login-card h2 { font-size: 18px; margin-bottom: 6px; }
+    .login-card p { font-size: 13.5px; color: #64748b; line-height: 1.5; margin-bottom: 18px; }
+    .login-card label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+    .login-card input {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+    }
+    .login-card input:focus { outline: none; border-color: #1a4fa8; box-shadow: 0 0 0 3px rgba(26,79,168,0.15); }
+    .login-card button {
+      width: 100%;
+      margin-top: 14px;
+      padding: 11px;
+      border: 0;
+      border-radius: 8px;
+      background: #1a4fa8;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .login-card button:hover { background: #0d2b6b; }
+    .login-erro { color: #b91c1c; font-size: 13px; margin-top: 12px; min-height: 18px; }
+    .sessao {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #64748b;
+    }
+    .sessao button {
+      background: none;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 12.5px;
+      color: #475569;
+      cursor: pointer;
+    }
+    [hidden] { display: none !important; }
+
     /* ── Responsive ── */
     @media (max-width: 500px) {
       .grid { grid-template-columns: 1fr; }
@@ -224,8 +282,22 @@
   </div>
 </header>
 
-<main>
-  <p class="section-title">13 agentes disponíveis</p>
+<section class="login" id="login">
+  <form class="login-card" id="login-form">
+    <h2>Acesso exclusivo para alunos</h2>
+    <p>Digite o e-mail que você usou na inscrição da ePREV para liberar os agentes.</p>
+    <label for="email">E-mail</label>
+    <input id="email" type="email" autocomplete="email" required placeholder="seuemail@exemplo.com" />
+    <button type="submit">Entrar</button>
+    <div class="login-erro" id="login-erro" role="alert"></div>
+  </form>
+</section>
+
+<main id="hub" hidden>
+  <div class="sessao">
+    <span class="section-title" style="margin:0">13 agentes disponíveis</span>
+    <button type="button" id="sair">Sair</button>
+  </div>
 
   <div class="grid">
 
@@ -484,5 +556,48 @@
   <br>Os agentes são alimentados pelo Google Gemini. Revise sempre o output antes de usar em processos.
 </footer>
 
+<script src="alunos.js"></script>
+<script>
+  (function () {
+    var KEY = 'eprev-hub-acesso';
+    var login = document.getElementById('login');
+    var hub = document.getElementById('hub');
+    var erro = document.getElementById('login-erro');
+
+    async function hash(email) {
+      var data = new TextEncoder().encode(window.ALUNOS_SALT + email.trim().toLowerCase());
+      var buf = await crypto.subtle.digest('SHA-256', data);
+      return Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+    }
+
+    function liberar(h) {
+      try { localStorage.setItem(KEY, h); } catch (e) {}
+      login.hidden = true;
+      hub.hidden = false;
+    }
+
+    var salvo = null;
+    try { salvo = localStorage.getItem(KEY); } catch (e) {}
+    if (salvo && window.ALUNOS.has(salvo)) liberar(salvo);
+
+    document.getElementById('login-form').addEventListener('submit', async function (ev) {
+      ev.preventDefault();
+      erro.textContent = '';
+      var h = await hash(document.getElementById('email').value);
+      if (window.ALUNOS.has(h)) {
+        liberar(h);
+      } else {
+        erro.textContent = 'E-mail não encontrado na lista de alunos. Confira se é o mesmo e-mail da inscrição ou fale com a equipe ePREV.';
+      }
+    });
+
+    document.getElementById('sair').addEventListener('click', function () {
+      try { localStorage.removeItem(KEY); } catch (e) {}
+      hub.hidden = true;
+      login.hidden = false;
+      document.getElementById('email').value = '';
+    });
+  })();
+</script>
 </body>
 </html>
